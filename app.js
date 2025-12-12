@@ -385,10 +385,8 @@ const app = {
         
         try {
             const response = await this.callApi({
-                action: 'update_item_status',
+                action: 'claim_item',
                 item_id: itemId,
-                status: 'Claimed',
-                is_claimed: '1',
                 user_id: this.state.user.user_id
             });
             
@@ -396,17 +394,18 @@ const app = {
                 this.showMessage('Item marked as claimed successfully!');
                 this.showMyPosts(); // Refresh the list
             } else {
-                this.showMessage(response.message || 'Failed to update item status');
+                this.showMessage(response.message || 'Failed to mark item as claimed');
             }
         } catch (error) {
             console.error('Error marking item as claimed:', error);
-            this.showMessage('An error occurred while updating the item');
+            this.showMessage('An error occurred while marking the item as claimed');
         }
     },
     
     editItem: function(itemId) {
         // Show the item in edit mode
-        this.showItemDetails(itemId, true);
+        this.showDetails(itemId, false); // Pass false to skip the edit mode toggle
+        this.toggleEditMode(true); // Enable edit mode
     },
     
     deleteItem: async function(itemId) {
@@ -483,8 +482,9 @@ const app = {
 
         items.forEach(item => {
             const isOwner = this.state.user && item.user_id == this.state.user.user_id;
-            const typeColor = item.type === 'Lost' ? 'text-red-500' : 'text-green-500';
-            const iconType = item.type === 'Lost' ? 'frown' : 'smile';
+            const isClaimed = item.is_claimed === '1';
+            const typeColor = isClaimed ? 'bg-green-100 text-green-700' : (item.type === 'Lost' ? 'text-red-500' : 'text-green-500');
+            const iconType = isClaimed ? 'check-circle' : (item.type === 'Lost' ? 'frown' : 'smile');
             
             const imageUrl = item.image_url && item.image_url.startsWith('http')
                                ? item.image_url
@@ -496,7 +496,7 @@ const app = {
                         <h3 class="text-lg font-semibold text-gray-800">${item.item_name}</h3>
                         <span class="${typeColor} font-bold flex items-center">
                             <i data-lucide="${iconType}" class="w-4 h-4 mr-1"></i>
-                            ${item.type}
+                            ${isClaimed ? 'Claimed' : item.type}
                         </span>
                     </div>
                     <div class="w-full h-32 mb-2 bg-gray-100 rounded-md overflow-hidden">
